@@ -1,4 +1,4 @@
-function execute( type, arm )
+function execute( type, arm, max )
 
     syms t
 
@@ -10,40 +10,69 @@ function execute( type, arm )
 
     if type == 00
       % Sine
-      f = sin(wo*t);
+      f = Am/2 * sin(wo*t);
     elseif type == 01
       % Square
-      f = heaviside(-t); %pulso rectangular
+      f = Am/2 * heaviside(-t); %pulso rectangular
     elseif type == 10
       % Tri
-      f = t;
+      f = Am/2 * t;
     elseif type == 11
       % Other
-      f = sin(wo*t) + sin((wo/3)*t+15);
+      f = Am/2 * sin(wo*t) + Am/2 * sin((wo/3)*t+15);
     end
 
     figure(1)
     ezplot(f,[-T/2 T/2])
+   
 
-    ao = (2/T)*int(f,t,-T/2,T/2);
+    ao = (1/T)*int(f,t,-T/2,T/2);
     an = (2/T)*int(f*cos(wo*n*t),t,-T/2,T/2);
     bn = (2/T)*int(f*sin(wo*n*t),t,-T/2,T/2);
 
-    ph = abs(getPolar(t,T,wo,f,n));
     pp = 0;
     aa = 0;
     bb = 0;
-
-    for i = n
-       aa = aa + ( an(i)*cos(i*wo*t) );
-       bb = bb + ( bn(i)*sin(i*wo*t) );
-       pp = pp + (2*(ph(i)^2));
-    end
-
+    
+    a0 = 1/4*(double(ao)^2);
+    
     pw = getPTotal(f,T,t);
     fprintf('Potencia total: %f\n', pw);
 
-    parm = double(pp);
+    for i = n
+        if pp >= pw*max
+            fprintf('Potencia al ->armónico [%d][%d rad/s]: %f W\n', i, i*2*pi, pp + a0);
+           break 
+        end
+%         JP code
+        aa = aa + ( an(i)*cos(i*wo*t) );
+        bb = bb + ( bn(i)*sin(i*wo*t) );
+%         --- end
+        pp = pp + ((double(an(i))^2 + double(bn(i))^2)/2);
+    end
+    
+    power_arm = pp;
+
+    
+    
+    % Calculate power bandwidth
+    % Applying Parseval's principle
+%     ttp = 1/4*(double(ao)^2);
+%     condition = pw*max;
+%     count = 1;
+%     while 1
+%         if 1/2*ttp >= condition
+%             fprintf('Potencia al armónico [%d][%d rad/s]: %f W\n', count, count*2*pi, ttp/2);
+%             break
+%         end
+%         a_n = double((2/T)*int(f*cos(wo*count*t),t,-T/2,T/2));
+%         b_n = double((2/T)*int(f*sin(wo*count*t),t,-T/2,T/2));
+%         temp = a_n^2 + b_n^2;
+%         ttp = ttp + temp;
+%         count = count + 1;
+%     end    
+    
+    parm = double(power_arm);
     fprintf('Potencia al armonico %f = %f\n', arm, parm);
 
     per = getPercentage(parm,pw);
@@ -70,12 +99,5 @@ function pw = getPTotal(f,T,t)
 
   % Potencia Total
   pw = double((1/T)*int((f^2),t,-T/2,T/2));
-
-end
-
-function polar = getPolar(t,T,wo,f,n)
-
-  % Serie polar
-  polar = (1/T)*int(f*exp(-j*n*wo*t),t,-T/2,T/2);
 
 end
