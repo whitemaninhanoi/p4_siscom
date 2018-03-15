@@ -7,5 +7,5 @@ clf;
 % Tri     10
 % Other   11
 
-% excute(type, harmonics)
-execute( 01, 10 );
+% excute(type, harmonics, probabilidad)
+execute( 01, 20, 0.9 );
