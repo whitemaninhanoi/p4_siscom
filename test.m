@@ -8,4 +8,4 @@ clf;
 % Other   11
 
 % excute(type, harmonics, probabilidad)
-execute( 01, 20, 0.9 );
+execute( 01, 30, 0.8 );

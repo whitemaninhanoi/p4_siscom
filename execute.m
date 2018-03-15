@@ -26,7 +26,7 @@ function execute( type, arm, max )
     ezplot(f,[-T/2 T/2])
    
 
-    ao = (1/T)*int(f,t,-T/2,T/2);
+    ao = (2/T)*int(f,t,-T/2,T/2);
     an = (2/T)*int(f*cos(wo*n*t),t,-T/2,T/2);
     bn = (2/T)*int(f*sin(wo*n*t),t,-T/2,T/2);
 
@@ -38,17 +38,28 @@ function execute( type, arm, max )
     
     pw = getPTotal(f,T,t);
     fprintf('Potencia total: %f\n', pw);
-
+    
+    flag = 0;
+    flag2 = 0;
     for i = n
-        if pp >= pw*max
-            fprintf('Potencia al ->armónico [%d][%d rad/s]: %f W\n', i, i*2*pi, pp + a0);
-           break 
+        if (a0+(pp/2)) >= pw*0.5
+            flag = flag + 1;
+            if flag == 1
+                fprintf('Potencia de 3DB [%d armonico] - [%f Hz BW] - %f W\n', i, double((i*frec)-frec), a0+(pp/2)); 
+            end
         end
+        if (a0+(pp/2)) >= pw*max
+            flag2 = flag2 + 1;
+            if flag2 == 1
+                fprintf('Potencial Maximo [%d armonico] - [%f Hz BW] - %f W\n', i, double((i*frec)-frec), a0+(pp/2)); 
+            end
+        end
+            
 %         JP code
         aa = aa + ( an(i)*cos(i*wo*t) );
         bb = bb + ( bn(i)*sin(i*wo*t) );
 %         --- end
-        pp = pp + ((double(an(i))^2 + double(bn(i))^2)/2);
+        pp = pp + (an(i)^2 + bn(i)^2);
     end
     
     power_arm = pp;
@@ -57,20 +68,21 @@ function execute( type, arm, max )
     
     % Calculate power bandwidth
     % Applying Parseval's principle
-%     ttp = 1/4*(double(ao)^2);
+%     pp = 0;
 %     condition = pw*max;
-%     count = 1;
-%     while 1
-%         if 1/2*ttp >= condition
-%             fprintf('Potencia al armónico [%d][%d rad/s]: %f W\n', count, count*2*pi, ttp/2);
-%             break
+%     flag = 0;
+%     for i = n
+%         if (pp + a0) >= condition
+%             flag = flag + 1;
+%             if flag == 1
+%                 fprintf('Potencia al <-armónico [%d][%d rad/s]: %f W\n', i, i*2*pi, a0+(pp/2));
+%             end
 %         end
-%         a_n = double((2/T)*int(f*cos(wo*count*t),t,-T/2,T/2));
-%         b_n = double((2/T)*int(f*sin(wo*count*t),t,-T/2,T/2));
-%         temp = a_n^2 + b_n^2;
-%         ttp = ttp + temp;
-%         count = count + 1;
-%     end    
+%         cn = double((an(i)^2 + bn(i)^2))/2;
+%         pp = pp + cn;
+%     end
+%     
+%     double(pp)
     
     parm = double(power_arm);
     fprintf('Potencia al armonico %f = %f\n', arm, parm);
